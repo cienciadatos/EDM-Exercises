@@ -4,6 +4,5 @@ library(carData)
 
 print("Hola")
 print("adios")
-print("buenas")
 print("casa")
 
