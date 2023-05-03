@@ -1,5 +1,0 @@
-[core]
-    analytics = false
-    autostage = true
-['remote "data"']
-    url = gdrive://1YaE29ks6tr827XCqOq8cgQmM5EDjm9zu
