@@ -169,7 +169,7 @@ ggplot(th, aes(x=temp, y=hum)) +
   # Add labels to the x and y axes
   labs(x = "Temperature (°C)", y = "Humidity (%)") +
   # Add a title to the colorbar
-  scale_fill_continuous(name = "ŷ")
+  scale_fill_continuous(name = "ypred")
 ```
 ```{r densities}
 
