@@ -7,24 +7,120 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(plotly)
+library(reshape2)
+library(lubridate)
+library(randomForestSRC)
 ```
 
-## R Markdown
+## 1.- One dimensional Partial Dependence Plot.
+The partial dependence plot shows the marginal effect of a feature on the predicted outcome of a previously fit model. 
+ 
+### EXERCISE:
+Apply PDP to the regression example of predicting bike rentals. Fit a random forest approximation for the prediction of bike rentals (cnt). Use the partial dependence plot to visualize the relationships the model learned. Use the slides shown in class as model.  
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+### QUESTION:
+Analyse the influence of days since 2011, temperature, humidity and wind speed on the predicted bike counts.
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+```{r exercise_1}
+days <- read.csv("data/day.csv")
 
-```{r cars}
-summary(cars)
+days$dteday <- as_date(days$dteday)
+days_since <- select(days, workingday, holiday, temp, hum, windspeed, cnt)
+days_since$days_since_2011 <- int_length(interval(ymd("2011-01-01"), days$dteday)) / (3600*24)
+days_since$SUMMER <- ifelse(days$season == 3, 1, 0)
+days_since$FALL <- ifelse(days$season == 4, 1, 0)
+days_since$WINTER <- ifelse(days$season == 1, 1, 0)
+days_since$MISTY <- ifelse(days$weathersit == 2, 1, 0)
+days_since$RAIN <- ifelse(days$weathersit == 3 | days$weathersit == 4, 1, 0)
+days_since$temp <- days_since$temp * 47 - 8
+days_since$hum <- days_since$hum * 100
+days_since$windspeed <- days_since$windspeed * 67
 ```
 
-## Including Plots
 
-You can also embed plots, for example:
+```{r rf_model_and_results}
+model.rf <- rfsrc(cnt~., data=days_since)
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+results <- select(days_since, days_since_2011, temp, hum, windspeed, cnt)
+len <- nrow(days_since)
+for(c in names(results)[1:4])
+{
+  for(i in 1:len){
+    r <- days_since
+    r[[c]] <- days_since[[c]][i]
+    pred <- predict(model.rf, r)$predicted
+    results[[c]][i] <- sum(pred) / len
+  }
+}
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+```{r plot_results}
+plot_1 <- ggplot(days_since, aes(x=days_since_2011, y=results$days_since_2011)) +
+          geom_line() + 
+          ylim(c(0,6000)) + 
+          geom_rug(alpha=0.1, sides="b") + 
+          ylab("Prediction") + 
+          xlab("Days since 2011")
+
+plot_2 <- ggplot(days_since, aes(x=temp, y=results$temp)) + 
+          geom_line() + 
+          ylim(c(0,6000)) + 
+          geom_rug(alpha=0.1, sides="b") + 
+          xlab("Temperature")
+
+plot_3 <- ggplot(days_since, aes(x=hum, y=results$hum)) + 
+          geom_line() + 
+          ylim(c(0,6000)) + 
+          geom_rug(alpha=0.1, sides="b") + 
+          xlab("Humidity")
+
+plot_4 <- ggplot(days_since, aes(x=windspeed, y=results$windspeed)) + 
+          geom_line() + 
+          ylim(c(0,6000)) + 
+          geom_rug(alpha=0.1, sides="b") + 
+          xlab("Wind speed")
+
+subplot(plot_1, plot_2, plot_3, plot_4, 
+          shareX = FALSE, 
+          shareY = TRUE, 
+          titleX = TRUE)
+```
+
+## 2.- Bidimensional Partial Dependency Plot.
+
+### EXERCISE:
+Generate a 2D Partial Dependency Plot with humidity and temperature to predict the number of bikes rented depending on those parameters.
+
+> **BE CAREFUL: due to the size, extract a set of random samples from the BBDD before generating the data for the Partial Dependency Plot.**
+
+Show the density distribution of both input features with the 2D plot as shown in the class slides. 
+
+TIP: Use geom_tile() to generate the 2D plot. Set width and height to avoid holes. 
+
+### QUESTION:
+Interpret the results.
+
+```{r}
+
+```
+
+## 3.- PDP to explain the price of a house.
+
+### EXERCISE:
+Apply the previous concepts to predict the price of a house from the database kc_house_data.csv. In this case, use again a random forest approximation for the prediction based on the features bedrooms, bathrooms, sqft_living, sqft_lot, floors and yr_built.Use the partial dependence plot to visualize the relationships the model learned.
+
+> **BE CAREFUL: due to the size, extract a set of random samples from the BBDD before generating the data for the Partial Dependency Plot.** 
+
+### QUESTION:
+Analyse the influence of bedrooms, bathrooms, sqft_living and floors on the predicted price.
+
+```{r}
+
+```
+
+
+
+
