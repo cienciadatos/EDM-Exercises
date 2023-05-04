@@ -123,10 +123,60 @@ TIP: Use geom_tile() to generate the 2D plot. Set width and height to avoid hole
 
 ### QUESTION:
 Interpret the results.
+```{r 2d_pdp}
+# Set the number of rows in the dataset
+nr <- nrow(days_since)
 
-```{r}
+# Sample 40 observations from the dataset
+sampled <- sample_n(days_since, 50)
 
+# Extract the temperature and humidity values from the sampled dataset
+temp <- sampled$temp
+hum <- sampled$hum
+
+# Combine the temperature and humidity values into a single dataframe
+th <- inner_join(data.frame(temp), data.frame(hum), by = character())
+
+# Add a new column to store the predictions
+th$predicted <- 0.0
+
+# Loop through each row in the temperature/humidity dataframe
+for(i in 1:nrow(th)){
+  
+  # Copy the original dataset to a new variable
+  r <- days_since
+  
+  # Set the temperature and humidity values in the new dataset to the current row's values
+  r[["temp"]] <- th[["temp"]][i]
+  r[["hum"]] <- th[["hum"]][i]
+  
+  # Make a prediction using the random forest model
+  sal <- predict(model.rf, r)$predicted
+  
+  # Calculate the average of all the predictions
+  th[["predicted"]][i] <- sum(sal) / nr
+}
 ```
+
+
+```{r 2d_pdp_plot}
+# Create a heatmap using ggplot2
+ggplot(th, aes(x=temp, y=hum)) + 
+  # Use the predicted values to fill the tiles
+  geom_tile(aes(fill=predicted, width=10, height=15)) + 
+  # Add a rug plot to show the distribution of the sampled points
+  geom_rug(alpha=0.01) +
+  # Add labels to the x and y axes
+  labs(x = "Temperature (°C)", y = "Humidity (%)") +
+  # Add a title to the colorbar
+  scale_fill_continuous(name = "ŷ")
+```
+## INTERPRETATION
+In the 2D PDP, we observe the same phenomena as in the PDP of temperature and humidity. The maximum number of bike rentals occurs at a temperature of around 20 degrees Celsius and a humidity below 50%. On the other hand, the minimum number of bike rentals occurs when the temperature is extremely low and the humidity is very high. This confirms what we saw in the PDPs, where we observed a certain independence between the effect of temperature and humidity.
+
+While the humidity is below 50%, the maximum number of bike rentals is achieved. However, the number of rentals decreases as the humidity increases beyond this threshold. In contrast, starting from the minimum temperature, an increase in temperature leads to an increase in bike rentals until it reaches a maximum at around 17.5 degrees Celsius. Beyond this point, the number of bike rentals remains constant until the temperature reaches 25 degrees Celsius, after which it decreases again.
+
+Based on the observations from the 1-dimensional PDPs and the 2D PDP The effects of temperature and humidity are independent. However, it is important to note that the model has not been trained on certain scenarios where there are not many real observations, and therefore, the explanations may not be reliable. It is also important to know the number of observations for each possible interaction of the variables in the dataset. Therefore, to make more accurate predictions, it may be necessary to use or collect more data, or refine the model to include more scenarios.
 
 ## 3.- PDP to explain the price of a house.
 
