@@ -171,6 +171,41 @@ ggplot(th, aes(x=temp, y=hum)) +
   # Add a title to the colorbar
   scale_fill_continuous(name = "ŷ")
 ```
+```{r densities}
+
+results2 <- select(sampled, temp, hum, cnt)
+len <- nrow(sampled)
+for(c in names(results2)[1:2])
+{
+  for(i in 1:len){
+    r <- sampled
+    r[[c]] <- sampled[[c]][i]
+    pred <- predict(model.rf, r)$predicted
+    results2[[c]][i] <- sum(pred) / len
+  }
+}
+
+
+plot_22 <- ggplot(sampled, aes(x=temp, y=results2$temp)) + 
+          geom_line() + 
+          ylim(c(0,6000)) + 
+          geom_rug(alpha=0.1, sides="b") + 
+          xlab("Temperature (ºC)") + 
+          ylab("Predicted number of bike rentals")
+
+plot_23 <- ggplot(sampled, aes(x=hum, y=results2$hum)) + 
+          geom_line() + 
+          ylim(c(0,6000)) + 
+          geom_rug(alpha=0.1, sides="b") + 
+          xlab("Humidity (%)")
+
+subplot(plot_22, plot_23,  
+          shareX = FALSE, 
+          shareY = TRUE, 
+          titleX = TRUE)
+  
+```
+
 ## INTERPRETATION
 In the 2D PDP, we observe the same phenomena as in the PDP of temperature and humidity. The maximum number of bike rentals occurs at a temperature of around 20 degrees Celsius and a humidity below 50%. On the other hand, the minimum number of bike rentals occurs when the temperature is extremely low and the humidity is very high. This confirms what we saw in the PDPs, where we observed a certain independence between the effect of temperature and humidity.
 
