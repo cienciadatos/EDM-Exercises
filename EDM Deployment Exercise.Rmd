@@ -23,6 +23,10 @@ Apply PDP to the regression example of predicting bike rentals. Fit a random for
 ### QUESTION:
 Analyse the influence of days since 2011, temperature, humidity and wind speed on the predicted bike counts.
 
+___________
+
+En primer lugar, cargamos los datos de la carpeta data, obtenida mediante el uso de DVC. En ella se encuentran los archivos .csv y los .dvc, almacenados en el repositorio de Google Drive. Una vez cargamos la data, procedemos a transformar las variables y a filtrar por fecha desde 2011 en adelante. 
+
 ```{r exercise_1}
 days <- read.csv("data/day.csv")
 
@@ -39,6 +43,7 @@ days_since$hum <- days_since$hum * 100
 days_since$windspeed <- days_since$windspeed * 67
 ```
 
+Una vez finalizamos la transformación y filtrado de las variables, pasamos al entrenamiento del modelo con Random Forest. De igual manera, realizamos las predicciones correspondientes. El código se muestra a continuación:
 
 ```{r rf_model_and_results}
 model.rf <- rfsrc(cnt~., data=days_since)
@@ -56,6 +61,7 @@ for(c in names(results)[1:4])
 }
 ```
 
+Por último, ploteamos los resultados usando el gráfico de dependencias parciales para las variables de "days_since_2011", "temp", "hum" y "windspeed". 
 
 ```{r plot_results}
 plot_1 <- ggplot(days_since, aes(x=days_since_2011, y=results$days_since_2011)) +
@@ -88,6 +94,21 @@ subplot(plot_1, plot_2, plot_3, plot_4,
           shareY = TRUE, 
           titleX = TRUE)
 ```
+
+### INTERPRETATION
+
+**`Days since 2011`**: A medida que vamos avanzando en el tiempo (desde 2011), el alquiler de bicicletas tiende a aumentar. Es importantes destacar dos aspectos fundamentales:
+
+   1. Entre 130 y 350 días, la diferencia de la importancia es mínima en esta variable (siempre en torno a 3700-3800 bicicletas más).
+   2. La tendencia es siempre creciente, salvo en el tramo final. A partir del día 648 el alquiler de bicicletas disminuye de 5679 a 5104. 
+   
+Estas explicaciones son fiables, pues se tienen observaciones para todos los valores de esta variable.
+
+**`Temperature`**: Lo más destacable de esta variable es que a medida que la temperatura aumenta se alquilan más bicicletas, pasando 3180 bicicletas con -5 grados a 5274 bicicletas con 20 grados. En general, se alquilan más bicicletas cuando la temperatura es agradable (16-26 grados). Cuando hace frío o calor, se alquilan cada vez menos bicicletas.
+
+**`Humidity`**: Para valores de humedad menores del 50%, el número de bicicletas alquiladas se mantiene constante (unas 4700 bicicletas). Por otro lado, a medida que aumenta la humedad (desde el 50%), se alquilan cada vez menos bicicletas, alcanzando su mínimo (3704 bicicletas) cuando la humedad alcanza el 97%. No obstante, estas explicaciones deben ser tomadas con cuidado cuando la humedad se encuentra por debajo del 37% o por encima del 92%, ya que en esos casos no hay muchas observaciones, haciendo que las explicaciones no sean del todo fiables.
+
+**`Wind speed`**: El modelo predice que la tendencia de esta variable es claramente decreciente. A medida que aumenta la velocidad del viento se alquilan menos bicicletas, pasando de 4636 con velocidad del viento igual a 1.5; a 4178 cuando la velocidad del viento tiene un valor de 24. Para valores mayores que 24, el número de bicicletas alquiladas se mantiene estable en 4178. No obstante, para valores mayores que 24, hay que reconsiderar la fiabilidad de estas explicaciones, pues hay muy pocas observaciones.
 
 ## 2.- Bidimensional Partial Dependency Plot.
 
