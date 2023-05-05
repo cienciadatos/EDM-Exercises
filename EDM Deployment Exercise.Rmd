@@ -1,7 +1,7 @@
 ---
 title: "EDM - Deployment Exercise"
 author: "Pablo Bolta, Jacinto Dobón y Jorge López"
-date: "5/4/2023"
+date: "5/5/2023"
 output: html_document
 ---
 
@@ -123,6 +123,7 @@ TIP: Use geom_tile() to generate the 2D plot. Set width and height to avoid hole
 
 ### QUESTION:
 Interpret the results.
+
 ___________
 
 We will use the previously trained random forest model to make predictions on temperature and humidity data. Due to the volume of data we will randomly extract 50 observations. And we will complete the dataset in order to represent the 2D Partial Dependency Plot.
@@ -213,7 +214,7 @@ subplot(plot_22, plot_23,
   
 ```
 
-## INTERPRETATION
+### INTERPRETATION
 In the 2D PDP, we observe the same phenomena as in the PDP of temperature and humidity. The maximum number of bike rentals occurs at a temperature of around 20 degrees Celsius and a humidity below 50%. On the other hand, the minimum number of bike rentals occurs when the temperature is extremely low and the humidity is very high. This confirms what we saw in the PDPs, where we observed a certain independence between the effect of temperature and humidity.
 
 While the humidity is below 50%, the maximum number of bike rentals is achieved. However, the number of rentals decreases as the humidity increases beyond this threshold. In contrast, starting from the minimum temperature, an increase in temperature leads to an increase in bike rentals until it reaches a maximum at around 17.5 degrees Celsius. Beyond this point, the number of bike rentals remains constant until the temperature reaches 25 degrees Celsius, after which it decreases again.
@@ -269,7 +270,7 @@ plot_34 <- ggplot(sampled3, aes(x=floors, y=results3$floors)) + geom_line() + yl
 subplot(plot_31, plot_32, plot_33, plot_34, titleX = TRUE, shareX = FALSE, titleY = TRUE, shareY = TRUE)
 ```
 
-## INTERPRETATION
+### INTERPRETATION
 
 **'bedrooms'**: This variable behaves in an interesting way, starting from 1 bedroom, the more bedrooms, the cheaper the house, up to 3 bedrooms. From this point, the trend reverses, and the more bedrooms, the higher the price. This is probably because 3 bedrooms is the most common option. Although it cannot be stated with total certainty, since there are few observations for the variable when there are more than 6 bedrooms.
 
