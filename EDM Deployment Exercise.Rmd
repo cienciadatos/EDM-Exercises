@@ -25,7 +25,7 @@ Analyse the influence of days since 2011, temperature, humidity and wind speed o
 
 ___________
 
-En primer lugar, cargamos los datos de la carpeta data, obtenida mediante el uso de DVC. En ella se encuentran los archivos .csv y los .dvc, almacenados en el repositorio de Google Drive. Una vez cargamos la data, procedemos a transformar las variables y a filtrar por fecha desde 2011 en adelante. 
+First, we load the data from the data folder, obtained by using DVC. It contains the .csv and .dvc files, stored in the Google Drive repository. Once the data is loaded, we proceed to transform the variables and filter by date from 2011 onwards. 
 
 ```{r exercise_1}
 days <- read.csv("data/day.csv")
@@ -43,7 +43,7 @@ days_since$hum <- days_since$hum * 100
 days_since$windspeed <- days_since$windspeed * 67
 ```
 
-Una vez finalizamos la transformación y filtrado de las variables, pasamos al entrenamiento del modelo con Random Forest. De igual manera, realizamos las predicciones correspondientes. El código se muestra a continuación:
+Once we finished the transformation and filtering of the variables, we proceeded to the training of the model with Random Forest. In the same way, we perform the corresponding predictions. The code is shown below:
 
 ```{r rf_model_and_results}
 model.rf <- rfsrc(cnt~., data=days_since)
@@ -61,7 +61,7 @@ for(c in names(results)[1:4])
 }
 ```
 
-Por último, ploteamos los resultados usando el gráfico de dependencias parciales para las variables de "days_since_2011", "temp", "hum" y "windspeed". 
+Finally, we plotted the results using the partial dependence plot for the "days_since_2011", "temp", "hum" and "windspeed" variables.
 
 ```{r plot_results}
 plot_1 <- ggplot(days_since, aes(x=days_since_2011, y=results$days_since_2011)) +
@@ -97,18 +97,18 @@ subplot(plot_1, plot_2, plot_3, plot_4,
 
 ### INTERPRETATION
 
-**`Days since 2011`**: A medida que vamos avanzando en el tiempo (desde 2011), el alquiler de bicicletas tiende a aumentar. Es importantes destacar dos aspectos fundamentales:
+**`Days since 2011`**: As we move forward in time (since 2011), bicycle rentals tend to increase. It is important to highlight two fundamental aspects:
 
-   1. Entre 130 y 350 días, la diferencia de la importancia es mínima en esta variable (siempre en torno a 3700-3800 bicicletas más).
-   2. La tendencia es siempre creciente, salvo en el tramo final. A partir del día 648 el alquiler de bicicletas disminuye de 5679 a 5104. 
+   1. Between 130 and 350 days, the difference in importance is minimal in this variable (always around 3700-3800 more bicycles).
+   2. The trend is always increasing, except in the final stretch. From day 648 onwards, the number of bicycles rented decreases from 5679 to 5104. 
    
-Estas explicaciones son fiables, pues se tienen observaciones para todos los valores de esta variable.
+These explanations are reliable, since we have observations for all values of this variable.
 
-**`Temperature`**: Lo más destacable de esta variable es que a medida que la temperatura aumenta se alquilan más bicicletas, pasando 3180 bicicletas con -5 grados a 5274 bicicletas con 20 grados. En general, se alquilan más bicicletas cuando la temperatura es agradable (16-26 grados). Cuando hace frío o calor, se alquilan cada vez menos bicicletas.
+**`Temperature`**: The most remarkable aspect of this variable is that as the temperature increases, more bicycles are rented, from 3180 bicycles at -5 degrees to 5274 bicycles at 20 degrees. In general, more bicycles are rented when the temperature is pleasant (16-26 degrees). When it is cold or hot, fewer and fewer bicycles are rented.
 
-**`Humidity`**: Para valores de humedad menores del 50%, el número de bicicletas alquiladas se mantiene constante (unas 4700 bicicletas). Por otro lado, a medida que aumenta la humedad (desde el 50%), se alquilan cada vez menos bicicletas, alcanzando su mínimo (3704 bicicletas) cuando la humedad alcanza el 97%. No obstante, estas explicaciones deben ser tomadas con cuidado cuando la humedad se encuentra por debajo del 37% o por encima del 92%, ya que en esos casos no hay muchas observaciones, haciendo que las explicaciones no sean del todo fiables.
+**`Humidity`**: For humidity values below 50%, the number of bicycles rented remains constant (about 4700 bicycles). On the other hand, as humidity increases (from 50%), fewer and fewer bicycles are rented, reaching its minimum (3704 bicycles) when humidity reaches 97%. However, these explanations should be taken with caution when humidity is below 37% or above 92%, as in those cases there are not many observations, making the explanations not entirely reliable.
 
-**`Wind speed`**: El modelo predice que la tendencia de esta variable es claramente decreciente. A medida que aumenta la velocidad del viento se alquilan menos bicicletas, pasando de 4636 con velocidad del viento igual a 1.5; a 4178 cuando la velocidad del viento tiene un valor de 24. Para valores mayores que 24, el número de bicicletas alquiladas se mantiene estable en 4178. No obstante, para valores mayores que 24, hay que reconsiderar la fiabilidad de estas explicaciones, pues hay muy pocas observaciones.
+**`Wind speed`**: The model predicts that the trend of this variable is clearly decreasing. As wind speed increases, fewer bicycles are rented, going from 4636 with wind speed equal to 1.5; to 4178 when wind speed has a value of 24. For values greater than 24, the number of bicycles rented remains stable at 4178. However, for values greater than 24, the reliability of these explanations must be reconsidered, as there are very few observations.
 
 ## 2.- Bidimensional Partial Dependency Plot.
 
@@ -123,6 +123,10 @@ TIP: Use geom_tile() to generate the 2D plot. Set width and height to avoid hole
 
 ### QUESTION:
 Interpret the results.
+___________
+
+We will use the previously trained random forest model to make predictions on temperature and humidity data. Due to the volume of data we will randomly extract 50 observations. And we will complete the dataset in order to represent the 2D Partial Dependency Plot.
+
 ```{r 2d_pdp}
 # Set the number of rows in the dataset
 nr <- nrow(days_since)
@@ -135,7 +139,9 @@ temp <- sampled$temp
 hum <- sampled$hum
 
 # Combine the temperature and humidity values into a single dataframe
-th <- inner_join(data.frame(temp), data.frame(hum), by = character())
+th <- merge(data.frame(temp), data.frame(hum), by=NULL)
+# Remove duplicates from the dataframe
+th <- unique(th)
 
 # Add a new column to store the predictions
 th$predicted <- 0.0
@@ -157,7 +163,7 @@ for(i in 1:nrow(th)){
   th[["predicted"]][i] <- sum(sal) / nr
 }
 ```
-
+We plot the results using the two-dimensional partial dependence plot for the variables "temp" and "hum".
 
 ```{r 2d_pdp_plot}
 # Create a heatmap using ggplot2
@@ -171,8 +177,8 @@ ggplot(th, aes(x=temp, y=hum)) +
   # Add a title to the colorbar
   scale_fill_continuous(name = "ypred")
 ```
-
-```{r densities}
+Finally, we also include the one-dimensional plot of the extracted samples to ensure that the shape of the data is maintained.
+```{r sampled_1d_pdp}
 
 results2 <- select(sampled, temp, hum, cnt)
 len <- nrow(sampled)
@@ -224,47 +230,51 @@ Apply the previous concepts to predict the price of a house from the database kc
 ### QUESTION:
 Analyse the influence of bedrooms, bathrooms, sqft_living and floors on the predicted price.
 
-```{r}
+___________
+First we load the data from the dataset, extracting 1000 random samples to reduce the size. Next we obtain the dataframe that we will use for the representation:
+
+```{r pdp_house}
 h <- read.csv("data/kc_house_data.csv")
 
 set.seed(100)
 
-sampled <- sample_n(h, 1000)
-sampled <- select(sampled, bedrooms, bathrooms, sqft_living, sqft_lot, floors, yr_built, price)
+sampled3 <- sample_n(h, 1000)
+sampled3 <- select(sampled3, bedrooms, bathrooms, sqft_living, sqft_lot, floors, yr_built, price)
 
-model <- rfsrc(price~., data=sampled)
+model3 <- rfsrc(price~., data=sampled3)
 
-results3 <- select(sampled, bedrooms, bathrooms, sqft_living, floors, price)
-nr <- nrow(sampled)
-for(c in names(results)[1:4])
+results3 <- select(sampled3, bedrooms, bathrooms, sqft_living, floors, price)
+nr3 <- nrow(sampled3)
+for(c in names(results3)[1:4])
 {
-  for(i in 1:nr){
-    r <- sampled
-    r[[c]] <- sampled[[c]][i]
-    sal <- predict(model, r)$predicted
-    results[[c]][i] <- sum(sal) / nr
+  for(i in 1:nr3){
+    r <- sampled3
+    r[[c]] <- sampled3[[c]][i]
+    sal <- predict(model3, r)$predicted
+    results3[[c]][i] <- sum(sal) / nr3
   }
 }
 ```
 
+We plot the PDPs of the proposed variables as we did in exercise 1, but with a sampled version to consume less system resources:
 ```{r}
-plot_31 <- ggplot(sampled, aes(x=bedrooms, y=results$bedrooms)) + geom_line() + geom_rug(alpha=0.1, sides="b") + ylab("Prediction") + xlab("Bedrooms")
+plot_31 <- ggplot(sampled3, aes(x=bedrooms, y=results3$bedrooms)) + geom_line() + ylim(c(300000,2000000)) + geom_rug(alpha=0.1, sides="b") + ylab("Prediction") + xlab("Bedrooms") + ylab("Predicted house price")
 
-plot_32 <- ggplot(sampled, aes(x=bathrooms, y=results$bathrooms)) + geom_line() + geom_rug(alpha=0.1, sides="b") + xlab("Bathrooms")
+plot_32 <- ggplot(sampled3, aes(x=bathrooms, y=results3$bathrooms)) + geom_line() + ylim(c(300000,2000000)) + geom_rug(alpha=0.1, sides="b") + xlab("Bathrooms")
 
-plot_33 <- ggplot(sampled, aes(x=sqft_living, y=results$sqft_living)) + geom_line() + geom_rug(alpha=0.1, sides="b") + xlab("Sqft Living")
+plot_33 <- ggplot(sampled3, aes(x=sqft_living, y=results3$sqft_living)) + geom_line() + ylim(c(300000,2000000)) + geom_rug(alpha=0.1, sides="b") + xlab("Sqft Living")
 
-plot_34 <- ggplot(sampled, aes(x=floors, y=results$floors)) + geom_line() + geom_rug(alpha=0.1, sides="b")+ xlab("Floors")
+plot_34 <- ggplot(sampled3, aes(x=floors, y=results3$floors)) + geom_line() + ylim(c(300000,2000000)) + geom_rug(alpha=0.1, sides="b")+ xlab("Floors")
 
-subplot(plot_31, plot_32, plot_33, plot_34, titleX = TRUE, shareX = FALSE)
+subplot(plot_31, plot_32, plot_33, plot_34, titleX = TRUE, shareX = FALSE, titleY = TRUE, shareY = TRUE)
 ```
 
 ## INTERPRETATION
 
-**'bedrooms'**: This variable behaves in an interesting way, starting from 0 bedrooms, the more bedrooms, the cheaper the property will be, up to 3 bedrooms. From this point on, the trend reverses, and the more bedrooms, the higher the price. However, this cannot be asserted with complete confidence, as there are few observations for the variable when there are 0 or more than 6 bedrooms.
+**'bedrooms'**: This variable behaves in an interesting way, starting from 1 bedroom, the more bedrooms, the cheaper the house, up to 3 bedrooms. From this point, the trend reverses, and the more bedrooms, the higher the price. This is probably because 3 bedrooms is the most common option. Although it cannot be stated with total certainty, since there are few observations for the variable when there are more than 6 bedrooms.
 
-**'bathrooms'**: It can be clearly seen that the more bathrooms, the higher the price of the property. However, this statement is not entirely reliable for 0 or more than 4 bathrooms, as there are hardly any training samples with these values.
+**'bathrooms'**: It is clearly observed that the more bathrooms, the higher the housing price. However, this statement is not entirely reliable in the case of the outliers 0.75 and 1.25, or for more than 4 bathrooms, since there are hardly any training samples with these values.
 
-**'Sqft_living'**: We can clearly see that the larger the living room area, the more expensive the property. However, this statement is in doubt for values less than 560 square feet and greater than 4900 square feet.
+**'Sqft_living'**: We clearly see that the larger the living area, the more expensive the housing. However, this statement may not be applicable to values below 52 square meters and above 450 square meters, which if they occur in the full data set are probably outliers. The local minimum around 33 square meters is striking, which again could be due to the fact that it is frequent in the housing stock.
 
 **'Floors'**: In this variable, we can assert that the higher the number of floors, the higher the price of the property, and this is a reliable explanation, as there are observations for all values in the training set.
