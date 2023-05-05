@@ -171,6 +171,7 @@ ggplot(th, aes(x=temp, y=hum)) +
   # Add a title to the colorbar
   scale_fill_continuous(name = "ypred")
 ```
+
 ```{r densities}
 
 results2 <- select(sampled, temp, hum, cnt)
@@ -224,9 +225,46 @@ Apply the previous concepts to predict the price of a house from the database kc
 Analyse the influence of bedrooms, bathrooms, sqft_living and floors on the predicted price.
 
 ```{r}
+h <- read.csv("data/kc_house_data.csv")
 
+set.seed(100)
+
+sampled <- sample_n(h, 1000)
+sampled <- select(sampled, bedrooms, bathrooms, sqft_living, sqft_lot, floors, yr_built, price)
+
+model <- rfsrc(price~., data=sampled)
+
+results3 <- select(sampled, bedrooms, bathrooms, sqft_living, floors, price)
+nr <- nrow(sampled)
+for(c in names(results)[1:4])
+{
+  for(i in 1:nr){
+    r <- sampled
+    r[[c]] <- sampled[[c]][i]
+    sal <- predict(model, r)$predicted
+    results[[c]][i] <- sum(sal) / nr
+  }
+}
 ```
 
+```{r}
+plot_31 <- ggplot(sampled, aes(x=bedrooms, y=results$bedrooms)) + geom_line() + geom_rug(alpha=0.1, sides="b") + ylab("Prediction") + xlab("Bedrooms")
 
+plot_32 <- ggplot(sampled, aes(x=bathrooms, y=results$bathrooms)) + geom_line() + geom_rug(alpha=0.1, sides="b") + xlab("Bathrooms")
 
+plot_33 <- ggplot(sampled, aes(x=sqft_living, y=results$sqft_living)) + geom_line() + geom_rug(alpha=0.1, sides="b") + xlab("Sqft Living")
 
+plot_34 <- ggplot(sampled, aes(x=floors, y=results$floors)) + geom_line() + geom_rug(alpha=0.1, sides="b")+ xlab("Floors")
+
+subplot(plot_31, plot_32, plot_33, plot_34, titleX = TRUE, shareX = FALSE)
+```
+
+## INTERPRETATION
+
+**'bedrooms'**: This variable behaves in an interesting way, starting from 0 bedrooms, the more bedrooms, the cheaper the property will be, up to 3 bedrooms. From this point on, the trend reverses, and the more bedrooms, the higher the price. However, this cannot be asserted with complete confidence, as there are few observations for the variable when there are 0 or more than 6 bedrooms.
+
+**'bathrooms'**: It can be clearly seen that the more bathrooms, the higher the price of the property. However, this statement is not entirely reliable for 0 or more than 4 bathrooms, as there are hardly any training samples with these values.
+
+**'Sqft_living'**: We can clearly see that the larger the living room area, the more expensive the property. However, this statement is in doubt for values less than 560 square feet and greater than 4900 square feet.
+
+**'Floors'**: In this variable, we can assert that the higher the number of floors, the higher the price of the property, and this is a reliable explanation, as there are observations for all values in the training set.
